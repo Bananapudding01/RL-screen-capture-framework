@@ -1,6 +1,6 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
-from main import DinoEnv
+from base_env import BaseEnv
 import torch
 
 if torch.backends.mps.is_available():
@@ -14,7 +14,7 @@ else:
     print("Using CPU")
                  
 print("Creating environment...")
-env = DinoEnv()
+env = BaseEnv()
 
 print("Creating PPO model with optimized hyperparameters...")
 model = PPO(

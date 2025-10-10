@@ -1,10 +1,10 @@
 from stable_baselines3 import PPO
-from main import DinoEnv
+from base_env import BaseEnv
 import time
 import tensorboard
 
 model = PPO.load("dino_ppo_final")  # or whatever you named it
-env = DinoEnv()
+env = BaseEnv()
 
 print("Running trained model... Watch the game!")
 obs, info = env.reset()

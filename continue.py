@@ -1,6 +1,6 @@
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
-from main import DinoEnv
+from base_env import BaseEnv
 import torch
 import os
 import argparse
@@ -36,7 +36,7 @@ if not os.path.exists(args.model):
 
 print(f"\nLoading model from: {args.model}")
 print("Creating environment...")
-env = DinoEnv()
+env = BaseEnv()
 
 print("Loading existing model...")
 model = PPO.load(args.model, env=env, device=device)

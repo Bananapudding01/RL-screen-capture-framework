@@ -1,18 +1,16 @@
 import mss
 import time
 import cv2 
-import numpy as np
-from PIL import Image
-import pytesseract
 import gymnasium as gym
 from gymnasium import spaces
 import pyautogui as gui
+from PIL import Image
+import pytesseract
+import numpy as np
 from collections import deque
+import yaml
 
-game_cords = {"top": 300, "left": 310, "width": 300, "height": 60}
-score_cords = {"top": 267, "left": 226, "width": 90, "height": 18}
-
-class DinoEnv(gym.Env):
+class BaseEnv(gym.Env):
 
     def _gamecap(self, cords, grayscaled, sizex, sizey):
         game_capture = np.array(self.sct.grab(cords))
@@ -29,29 +27,31 @@ class DinoEnv(gym.Env):
         score_text = pytesseract.image_to_string(img)#, config='--psm 7 -c tessedit_char_whitelist=0123456789')
         return score_text
 
-    def __init__(self):
-        super(DinoEnv, self).__init__()
-
+    def __init__(self, config_path="config.yaml"):
+        super(BaseEnv, self).__init__()
         gui.PAUSE = 0.0
-
         self.sct = mss.mss()
-
-        self.frame_stack_size = 4
         
-        self.action_space = spaces.Discrete(2)  # 0=nothing, 1=jump
+        with open(config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+
+        self.game_cords = self.config["game_region"]
+        self.shape = self.config["input_shape"]
+        self.frame_stack_size = self.shape["frame_stack"]
+        self.action_space = spaces.Discrete(self.config["actions"]["discrete_actions"])
         
         self.observation_space = spaces.Box(
             low=0, 
             high=255,
-            shape=(60, 75, 4),  # grayscaled, 4 frames
+            shape=(self.shape["height"], self.shape["width"], self.shape["frame_stack"]),
             dtype=np.uint8
         )
-        self.frames = deque(maxlen=4)
+        self.frames = deque(maxlen=self.shape["frame_stack"])
     
     def reset(self, seed=None, options=None):
 
         print("Resetting...")
-        frame = self._gamecap(game_cords, True, 75, 60)
+        frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         super().reset(seed=seed)
         gui.moveTo(300, 400)
         gui.click()
@@ -68,14 +68,13 @@ class DinoEnv(gym.Env):
         
 
         self.frames.clear()
-        for _ in range(4):
+        for _ in range(self.shape["frame_stack"]):
             self.frames.append(frame)
         
         obs = np.stack(self.frames, axis=-1)
 
         self.frame_skip = 0
         return obs, {}
-    
     def step(self, action):
         last = time.time()
         reward = 0
@@ -83,7 +82,7 @@ class DinoEnv(gym.Env):
         if action == 1:
             gui.press("space")
 
-        frame = self._gamecap(game_cords, True, 75, 60)
+        frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
 
