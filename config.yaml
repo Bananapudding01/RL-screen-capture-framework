@@ -14,5 +14,20 @@ input_shape:
   width: 75
   frame_stack: 4
 
+preprocessing:
+  fps: 15
+  grayscale: True
 
-  
+score_capture:
+  top: 100
+  left: 100
+  width: 100
+  height: 100
+  num_only: True
+
+game_over_pixel:
+  top: 310
+  left: 330
+  RED: 83
+  GREEN: 83
+  BLUE: 83
