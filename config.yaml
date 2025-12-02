@@ -1,33 +1,25 @@
-# config.yaml
-
 actions:
-  discrete_actions: 2
-
-game_region:
-  top: 300
-  left: 310
-  width: 300
-  height: 60
-
-input_shape:
-  height: 60
-  width: 75
-  frame_stack: 4
-
-preprocessing:
-  fps: 15
-  grayscale: True
-
-score_capture:
-  top: 100
-  left: 100
-  width: 100
-  height: 100
-  num_only: True
-
+  discrete_actions: 5
 game_over_pixel:
-  top: 310
-  left: 330
-  RED: 83
-  GREEN: 83
-  BLUE: 83
+  BLUE: 6
+  GREEN: 6
+  RED: 6
+  left: 400
+  top: 400
+game_region:
+  height: 677
+  left: 78
+  top: 222
+  width: 768
+input_shape:
+  frame_stack: 4
+  height: 30
+  width: 34
+preprocessing:
+  fps: 10
+  grayscale: true
+score_capture:
+  height: 270
+  left: 70
+  top: 25
+  width: 60

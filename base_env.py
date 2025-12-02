@@ -13,15 +13,19 @@ import yaml
 class BaseEnv(gym.Env):
 
     def _gameover_pixel(self):
-
+        print("checking")
         img = np.array(self.sct.grab({
             "top": self.config["game_over_pixel"]["top"], 
             "left": self.config["game_over_pixel"]["left"],
             "width": 1,
             "height": 1
             }))
+        print(img)
+        print(self.config["game_over_pixel"]["top"])
+        print(self.config["game_over_pixel"]["left"])
 
         if img[0, 0, 0] == self.config["game_over_pixel"]["RED"]:
+            print("red true")
             return True
         else:
             return False
@@ -40,17 +44,11 @@ class BaseEnv(gym.Env):
     def _scorecap(self):
 
         game_capture = np.array(self.sct.grab(
-            self.scorecap_settings["top"],
-            self.scorecap_settings["left"],
-            self.scorecap_settings["width"],
-            self.scorecap_settings["height"]
+            self.scorecap_settings
             ))
         img = Image.fromarray(game_capture)
 
-        if self.scorecap_settings["num_only"] == True:
-            score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')
-        else:
-            score_text = pytesseract.image_to_string(img)
+        score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')
         return score_text
 
     def __init__(self, config_path="config.yaml"):
@@ -88,7 +86,7 @@ class BaseEnv(gym.Env):
             self.shape["height"]
             )
         super().reset(seed=seed)
-        gui.moveTo(300, 400)
+        gui.moveTo(300, 700)
         gui.click()
         gui.press('space')
 
@@ -112,7 +110,13 @@ class BaseEnv(gym.Env):
         reward = 0
 
         if action == 1:
-            gui.press("space")
+            gui.press("w")
+        elif action == 2:
+            gui.press("a")
+        elif action == 3:
+            gui.press("s")
+        elif action == 4:
+            gui.press("d")
 
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
@@ -124,7 +128,11 @@ class BaseEnv(gym.Env):
         if done:
             reward = -100.0 
         else:
-            reward = 1
+            score = self._scorecap()
+            if score != "":
+                reward = int(score)
+            else:
+                reward = 0
 
         # Fps cap
         dt = time.time() - last
