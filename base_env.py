@@ -10,28 +10,22 @@ import numpy as np
 from collections import deque
 import yaml
 import pydirectinput as directinput
-
 class BaseEnv(gym.Env):
-
     def _gamecap(self, cords, grayscaled, sizex, sizey):
         game_capture = np.array(self.sct.grab(cords))
         if grayscaled == True:
             game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
         if sizex > 0:
             game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
-
         return game_capture
         
     def _scorecap(self):
-
         game_capture = np.array(self.sct.grab(
             self.scorecap_settings
             ))
         img = Image.fromarray(game_capture)
-
         score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')
         return score_text
-
     def __init__(self, config_path="config.yaml"):
         super(BaseEnv, self).__init__()
         gui.PAUSE = 0.0
@@ -39,17 +33,21 @@ class BaseEnv(gym.Env):
         
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
-
         self.game_cords = self.config["game_region"]
         self.shape = self.config["input_shape"]
         self.frame_stack_size = self.shape["frame_stack"]
-        self.action_space = spaces.Discrete(self.config["actions"]["discrete_actions"])
+        # **CHANGED: Box space for continuous movement + click**
+        self.action_space = spaces.Box(
+            low=np.array([-1.0, -1.0, 0.0]),   # [x, y, click]
+            high=np.array([1.0, 1.0, 1.0]), 
+            shape=(3,),
+            dtype=np.float32
+        )
+        self.last_score = 0
         self.preprocessing = self.config["preprocessing"]
         self.frame_time = 1 / self.preprocessing["fps"]
         self.scorecap_settings = self.config["score_capture"]
-
         self.time = time.time()
-
         
         self.observation_space = spaces.Box(
             low=0, 
@@ -60,7 +58,6 @@ class BaseEnv(gym.Env):
         self.frames = deque(maxlen=self.shape["frame_stack"])
     
     def reset(self, seed=None, options=None):
-
         print("Resetting...")
         frame = self._gamecap(
             self.game_cords, 
@@ -70,57 +67,50 @@ class BaseEnv(gym.Env):
             )
         super().reset(seed=seed)
         gui.moveTo(300, 800)
+        time.sleep(3)
         gui.click()
-
         self.frames.clear()
         for _ in range(self.shape["frame_stack"]):
             self.frames.append(frame)
         
         obs = np.stack(self.frames, axis=-1)
-
+        self.time = time.time()
+        self.last_score = 0
         self.frame_skip = 0
         return obs, {}
     def step(self, action):
         last = time.time()
         reward = 0
-
-        if action == 1:
-            directinput.moveRel(100,0, relative=True)
-        elif action == 2:
-            directinput.moveRel(-100,0, relative=True)
-        elif action == 3:
-            directinput.moveRel(0,100, relative=True)
-        elif action == 4:
-            directinput.moveRel(0,-100, relative=True)
-        elif action == 5:
+        # **CHANGED: Continuous mouse movement**
+        max_movement = 100
+        dx = int(action[0] * max_movement)  # -100 to +100 pixels
+        dy = int(action[1] * max_movement)  # -100 to +100 pixels
+        directinput.moveRel(dx, dy, relative=True)
+        
+        # **CHANGED: Click based on threshold**
+        if action[2] > 0.5:
             gui.click()
-            reward += -1
-
-        self.time = time.time()
-
+            #reward += -1
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
-
-        if time.time() + 30 > self.time:
+        if time.time() - 30 > self.time:
             done = True
         else: 
             done = False
-
         # Calculate reward
-
         
+
         score = self._scorecap()
         if score != "":
-            reward = int(score)
+            reward += int(score) - self.last_score
+            self.last_score = int(score)
         else:
             reward = 0
-
         # Fps cap
         dt = time.time() - last
         if dt < self.frame_time:
             time.sleep(self.frame_time - dt)
-
         truncated = False
         info = {}
         return obs, reward, done, truncated, info
