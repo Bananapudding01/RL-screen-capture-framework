@@ -9,28 +9,9 @@ import pytesseract
 import numpy as np
 from collections import deque
 import yaml
+import pydirectinput as directinput
 
 class BaseEnv(gym.Env):
-
-    def _gameover_pixel(self):
-        print("checking")
-        img = np.array(self.sct.grab({
-            "top": self.config["game_over_pixel"]["top"], 
-            "left": self.config["game_over_pixel"]["left"],
-            "width": 1,
-            "height": 1
-            }))
-        print(img)
-        print(self.config["game_over_pixel"]["top"])
-        print(self.config["game_over_pixel"]["left"])
-
-        if img[0, 0, 0] == self.config["game_over_pixel"]["RED"]:
-            print("red true")
-            return True
-        else:
-            return False
-
-
 
     def _gamecap(self, cords, grayscaled, sizex, sizey):
         game_capture = np.array(self.sct.grab(cords))
@@ -67,6 +48,8 @@ class BaseEnv(gym.Env):
         self.frame_time = 1 / self.preprocessing["fps"]
         self.scorecap_settings = self.config["score_capture"]
 
+        self.time = time.time()
+
         
         self.observation_space = spaces.Box(
             low=0, 
@@ -86,16 +69,8 @@ class BaseEnv(gym.Env):
             self.shape["height"]
             )
         super().reset(seed=seed)
-        gui.moveTo(300, 700)
+        gui.moveTo(300, 800)
         gui.click()
-        gui.press('space')
-
-        test = True
-        while test:
-            if self._gameover_pixel() == False:
-                test = False
-            else:
-                gui.press('space')
 
         self.frames.clear()
         for _ in range(self.shape["frame_stack"]):
@@ -110,29 +85,36 @@ class BaseEnv(gym.Env):
         reward = 0
 
         if action == 1:
-            gui.press("w")
+            directinput.moveRel(100,0, relative=True)
         elif action == 2:
-            gui.press("a")
+            directinput.moveRel(-100,0, relative=True)
         elif action == 3:
-            gui.press("s")
+            directinput.moveRel(0,100, relative=True)
         elif action == 4:
-            gui.press("d")
+            directinput.moveRel(0,-100, relative=True)
+        elif action == 5:
+            gui.click()
+            reward += -1
+
+        self.time = time.time()
 
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
 
-        done = self._gameover_pixel()
+        if time.time() + 30 > self.time:
+            done = True
+        else: 
+            done = False
 
         # Calculate reward
-        if done:
-            reward = -100.0 
+
+        
+        score = self._scorecap()
+        if score != "":
+            reward = int(score)
         else:
-            score = self._scorecap()
-            if score != "":
-                reward = int(score)
-            else:
-                reward = 0
+            reward = 0
 
         # Fps cap
         dt = time.time() - last
