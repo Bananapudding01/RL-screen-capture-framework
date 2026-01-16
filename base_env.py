@@ -36,11 +36,11 @@ class BaseEnv(gym.Env):
         self.game_cords = self.config["game_region"]
         self.shape = self.config["input_shape"]
         self.frame_stack_size = self.shape["frame_stack"]
-        # **CHANGED: Box space for continuous movement + click**
+        # **CHANGED: Only 2D movement (x, y), no click decision**
         self.action_space = spaces.Box(
-            low=np.array([-1.0, -1.0, 0.0]),   # [x, y, click]
-            high=np.array([1.0, 1.0, 1.0]), 
-            shape=(3,),
+            low=-1.0,
+            high=1.0, 
+            shape=(2,),  # Just [x, y]
             dtype=np.float32
         )
         self.last_score = 0
@@ -66,9 +66,13 @@ class BaseEnv(gym.Env):
             self.shape["height"]
             )
         super().reset(seed=seed)
-        gui.moveTo(300, 800)
-        time.sleep(3)
-        gui.click()
+        while True:
+            gui.moveTo(600, 1000)
+            time.sleep(0.5)
+            gui.click()
+            if gui.position() == (1280, 707):
+                break
+            
         self.frames.clear()
         for _ in range(self.shape["frame_stack"]):
             self.frames.append(frame)
@@ -81,29 +85,38 @@ class BaseEnv(gym.Env):
     def step(self, action):
         last = time.time()
         reward = 0
-        # **CHANGED: Continuous mouse movement**
-        max_movement = 100
-        dx = int(action[0] * max_movement)  # -100 to +100 pixels
-        dy = int(action[1] * max_movement)  # -100 to +100 pixels
-        directinput.moveRel(dx, dy, relative=True)
         
-        # **CHANGED: Click based on threshold**
-        if action[2] > 0.5:
-            gui.click()
-            #reward += -1
+        
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
-        if time.time() - 30 > self.time:
+
+        #time check
+        if time.time() - 29.5 > self.time:
             done = True
         else: 
             done = False
+
+        #safety check
+        x,y = gui.position()
+        if x != 1280:
+            if y != 707:
+                done = True
+
+        # **CHANGED: Only handle x and y movement (2D action)**
+        max_movement = 350
+        dx = int(action[0] * max_movement)  # -500 to +500 pixels
+        dy = int(action[1] * max_movement)  # -500 to +500 pixels
+        directinput.moveRel(dx, dy, relative=True)
+        
+        # **CHANGED: Automatically click every step**
+        gui.click()
+        
         # Calculate reward
         
-
         score = self._scorecap()
         if score != "":
-            reward += int(score) - self.last_score
+            reward = (int(score) - self.last_score) * 100
             self.last_score = int(score)
         else:
             reward = 0
@@ -113,4 +126,6 @@ class BaseEnv(gym.Env):
             time.sleep(self.frame_time - dt)
         truncated = False
         info = {}
+        print("reward = " + str(reward))
+        print("score = " + str(score))
         return obs, reward, done, truncated, info

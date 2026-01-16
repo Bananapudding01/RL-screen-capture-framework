@@ -36,7 +36,7 @@ model = PPO(
 
 # Save checkpoints every 10k steps
 checkpoint_callback = CheckpointCallback(
-    save_freq=50000,
+    save_freq=10000,
     save_path="./checkpoints/",
     name_prefix="dino_model"
 )
@@ -49,7 +49,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps=10000,
+        total_timesteps=100000,
         callback=checkpoint_callback,
         progress_bar=True
     )
