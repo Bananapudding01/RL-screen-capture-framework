@@ -29,6 +29,7 @@ class BaseEnv(gym.Env):
     def __init__(self, config_path="config.yaml"):
         super(BaseEnv, self).__init__()
         gui.PAUSE = 0.0
+        directinput.PAUSE = 0
         self.sct = mss.mss()
         
         with open(config_path, 'r') as f:
@@ -36,13 +37,14 @@ class BaseEnv(gym.Env):
         self.game_cords = self.config["game_region"]
         self.shape = self.config["input_shape"]
         self.frame_stack_size = self.shape["frame_stack"]
-        # **CHANGED: Only 2D movement (x, y), no click decision**
         self.action_space = spaces.Box(
-            low=-1.0,
-            high=1.0, 
-            shape=(2,),  # Just [x, y]
+            low=np.array([-1.0, -1.0, 0.0]),
+            high=np.array([1.0, 1.0, 1.0]), 
+            shape=(3,),
             dtype=np.float32
         )
+
+        self.step_count = 0
         self.last_score = 0
         self.preprocessing = self.config["preprocessing"]
         self.frame_time = 1 / self.preprocessing["fps"]
@@ -80,52 +82,58 @@ class BaseEnv(gym.Env):
         obs = np.stack(self.frames, axis=-1)
         self.time = time.time()
         self.last_score = 0
+        self.step_count = 0
         self.frame_skip = 0
         return obs, {}
+    
     def step(self, action):
+        self.step_count += 1
         last = time.time()
         reward = 0
         
+        # Movement
+        max_movement_y = 75
+        max_movement_x = 200
+        dx = int(action[0] * max_movement_x)
+        dy = int(action[1] * max_movement_y)
+        directinput.moveRel(dx, dy, relative=True)
         
+        # Click
+        if action[2] > 0.5:
+            gui.click()
+        
+        # Screen capture
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
-
-        #time check
+        
+        # Time check
         if time.time() - 29.5 > self.time:
             done = True
         else: 
             done = False
-
-        #safety check
-        x,y = gui.position()
-        if x != 1280:
-            if y != 707:
-                done = True
-
-        # **CHANGED: Only handle x and y movement (2D action)**
-        max_movement = 350
-        dx = int(action[0] * max_movement)  # -500 to +500 pixels
-        dy = int(action[1] * max_movement)  # -500 to +500 pixels
-        directinput.moveRel(dx, dy, relative=True)
         
-        # **CHANGED: Automatically click every step**
-        gui.click()
+        # Safety check
+        x, y = gui.position()
+        if x != 1280 or y != 707:
+            done = True
         
-        # Calculate reward
-        
-        score = self._scorecap()
-        if score != "":
-            reward = (int(score) - self.last_score) * 100
-            self.last_score = int(score)
+        # OCR (every 20 steps)
+        if self.step_count % 20 == 0:
+            score = self._scorecap()
+            if score != "":
+                reward = (int(score) - self.last_score)
+                self.last_score = int(score)
+            else:
+                reward = 0
         else:
             reward = 0
-        # Fps cap
+        
+        # FPS cap
         dt = time.time() - last
         if dt < self.frame_time:
             time.sleep(self.frame_time - dt)
+        
         truncated = False
         info = {}
-        print("reward = " + str(reward))
-        print("score = " + str(score))
         return obs, reward, done, truncated, info

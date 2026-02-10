@@ -1,26 +1,27 @@
 from stable_baselines3 import PPO
 from base_env import BaseEnv
 import time
-import tensorboard
 
-model = PPO.load("dino_ppo_final")  # or whatever you named it
+model = PPO.load("dino_ppo_final.zip")
+
 env = BaseEnv()
 
-print("Running trained model... Watch the game!")
-obs, info = env.reset()
+print("Running trained model...")
 
-for i in range(1000):  # Run for 1000 steps
+obs, info = env.reset()
+episode_reward = 0
+
+for i in range(1000):
     action, _states = model.predict(obs, deterministic=True)
     
-    if action == 1:
-        print(f"Step {i}: JUMPING")
-    else:
-        print(f"Step {i}: doing nothing")
-    
     obs, reward, done, truncated, info = env.step(action)
+    episode_reward += reward
+    
+    if reward > 0:
+        print(f"HIT! Reward: {reward}")
     
     if done:
-        print(f"Game over! Starting new episode...")
+        print(f"Episode reward: {episode_reward}\n")
+        episode_reward = 0
         obs, info = env.reset()
-
-print("Test complete!")
+        time.sleep(1)

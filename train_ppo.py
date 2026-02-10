@@ -34,9 +34,9 @@ model = PPO(
     tensorboard_log="./dino_tensorboard/",
 )
 
-# Save checkpoints every 10k steps
+# Save checkpoints every 20k steps
 checkpoint_callback = CheckpointCallback(
-    save_freq=10000,
+    save_freq=20000,
     save_path="./checkpoints/",
     name_prefix="dino_model"
 )
@@ -49,7 +49,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps=100000,
+        total_timesteps= 250000,
         callback=checkpoint_callback,
         progress_bar=True
     )
