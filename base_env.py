@@ -41,7 +41,7 @@ class BaseEnv(gym.Env):
 
             self.game = self.config["game"]
 
-        adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_adaptor.yaml"
+        adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_config.yaml"
         with open(adaptor_config_path, 'r') as f:
             self.adaptor_config = yaml.safe_load(f)
 
