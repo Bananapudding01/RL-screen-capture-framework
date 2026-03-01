@@ -40,7 +40,7 @@ class BaseEnv(gym.Env):
             self.config = yaml.safe_load(f)
 
             self.game = self.config["game"]
-            
+
         adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_adaptor.yaml"
         with open(adaptor_config_path, 'r') as f:
             self.adaptor_config = yaml.safe_load(f)
@@ -114,7 +114,7 @@ class BaseEnv(gym.Env):
         last = time.time()
 
         # game specific step logic
-        self.adaptor.stepinput()
+        self.adaptor.stepinput(action)
 
         # Screen capture
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])

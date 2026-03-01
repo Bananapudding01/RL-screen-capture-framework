@@ -9,7 +9,7 @@ class GameAdaptor:
     def resetinput(self):
         print("reset input")
     
-    def stepinput(self):
+    def stepinput(self, action):
         print("step input")
 
     def rewardinput(self):
