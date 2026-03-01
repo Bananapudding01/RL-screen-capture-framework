@@ -1,9 +1,14 @@
 actions:
-  # "discrete" or "continuous"
   action_space: discrete
+  continuous_high:
+  - 1.0
+  - 1.0
+  - 1.0
+  continuous_low:
+  - -1.0
+  - -1.0
+  - 0.0
   discrete_actions: 4
-  continuous_low: [-1.0, -1.0, 0.0]
-  continuous_high: [1.0, 1.0, 1.0]
 game_over_pixel:
   BLUE: 6
   GREEN: 6
