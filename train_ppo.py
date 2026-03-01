@@ -2,6 +2,11 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from base_env import BaseEnv
 import torch
+import yaml
+
+with open("config.yaml", 'r') as f:
+    config = yaml.safe_load(f)
+    game = config["game"]
 
 if torch.backends.mps.is_available():
     device = "mps"
@@ -31,20 +36,22 @@ model = PPO(
     ent_coef=0.05 ,
     vf_coef=0.5,
     max_grad_norm=0.5,
-    tensorboard_log="./dino_tensorboard/",
+    tensorboard_log="./" + game + "_tensorboard/",
 )
 
-# Save checkpoints every 20k steps
+frequency = 20000
+
+# Save checkpoints frequency
 checkpoint_callback = CheckpointCallback(
-    save_freq=20000,
+    save_freq=frequency,
     save_path="./checkpoints/",
-    name_prefix="dino_model"
+    name_prefix= game + "_model"
 )
 
 print("\nStarting training...")
-print("Watch the dino learn! Training will save checkpoints every 10k steps.")
+print("Training will save checkpoints every " + str(frequency) + " steps.")
 print("You can monitor progress with TensorBoard:")
-print("  tensorboard --logdir ./dino_tensorboard/")
+print("  tensorboard --logdir ./" + game + "_tensorboard/")
 print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
@@ -54,15 +61,15 @@ try:
         progress_bar=True
     )
     
-    model.save("dino_ppo_final")
-    print("\n✓ Training complete! Model saved as 'dino_ppo_final.zip'")
+    model.save(game + "_ppo_final")
+    print("\n✓ Training complete! Model saved as '" + game + "_ppo_final.zip' ")
     
 except KeyboardInterrupt:
     print("\n\nTraining interrupted by user.")
-    model.save("dino_ppo_interrupted")
-    print("✓ Progress saved as 'dino_ppo_interrupted.zip'")
+    model.save(game + "_ppo_interrupted")
+    print("✓ Progress saved as '" + game + "_ppo_interrupted.zip'")
 
 print("\nTo test your model, run:")
 print("  python test.py")
-print("\nTo view tensorboard, run: tensorboard --logdir ./dino_tensorboard/")
+print("\nTo view tensorboard, run: tensorboard --logdir ./" + game + "_tensorboard/")
 print("\nThen open: http://localhost:6006")                     

@@ -9,8 +9,12 @@ import pytesseract
 import numpy as np
 from collections import deque
 import yaml
-import pydirectinput as directinput
+import importlib
+import platform
+OS = platform.system()
+
 class BaseEnv(gym.Env):
+
     def _gamecap(self, cords, grayscaled, sizex, sizey):
         game_capture = np.array(self.sct.grab(cords))
         if grayscaled == True:
@@ -26,31 +30,44 @@ class BaseEnv(gym.Env):
         img = Image.fromarray(game_capture)
         score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')
         return score_text
+    
     def __init__(self, config_path="config.yaml"):
         super(BaseEnv, self).__init__()
-        gui.PAUSE = 0.0
-        directinput.PAUSE = 0
         self.sct = mss.mss()
         
+        # load base config file
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
-        self.game_cords = self.config["game_region"]
-        self.shape = self.config["input_shape"]
-        self.frame_stack_size = self.shape["frame_stack"]
-        self.action_space = spaces.Box(
-            low=np.array([-1.0, -1.0, 0.0]),
-            high=np.array([1.0, 1.0, 1.0]), 
-            shape=(3,),
-            dtype=np.float32
-        )
+
+            self.game = self.config["game"]
+
+        adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_config.yaml"
+        with open(adaptor_config_path, 'r') as f:
+            self.adaptor_config = yaml.safe_load(f)
+
+            self.action_space_type = self.adaptor_config["actions"]["action_space"]
+
+            if self.action_space_type == "discrete":
+                self.action_space = spaces.Discrete(self.adaptor_config["actions"]["discrete_actions"])
+            elif self.action_space_type == "continuous":
+                self.action_space = spaces.Box(
+                    low=np.array(self.adaptor_config["actions"]["continuous_low"]),
+                    high=np.array(self.adaptor_config["actions"]["continuous_high"]),
+                    shape=(len(self.adaptor_config["actions"]["continuous_low"]),),
+                    dtype=np.float32
+                )
+
+
+            self.game_cords = self.adaptor_config["game_region"]
+            self.shape = self.adaptor_config["input_shape"]
+            self.frame_stack_size = self.shape["frame_stack"]
 
         self.step_count = 0
         self.last_score = 0
-        self.preprocessing = self.config["preprocessing"]
+        self.preprocessing = self.adaptor_config["preprocessing"]
         self.frame_time = 1 / self.preprocessing["fps"]
-        self.scorecap_settings = self.config["score_capture"]
-        self.time = time.time()
-        
+        self.scorecap_settings = self.adaptor_config["score_capture"]
+
         self.observation_space = spaces.Box(
             low=0, 
             high=255,
@@ -58,6 +75,12 @@ class BaseEnv(gym.Env):
             dtype=np.uint8
         )
         self.frames = deque(maxlen=self.shape["frame_stack"])
+        self.time = time.time()
+
+        # initialize adaptor class for game-specific logic
+        path = "adaptors." + self.game + "." + self.game + "_adaptor"
+        module = importlib.import_module(path)
+        self.adaptor = module.GameAdaptor(self)
     
     def reset(self, seed=None, options=None):
         print("Resetting...")
@@ -67,68 +90,41 @@ class BaseEnv(gym.Env):
             self.shape["width"], 
             self.shape["height"]
             )
+        
         super().reset(seed=seed)
-        while True:
-            gui.moveTo(600, 1000)
-            time.sleep(0.5)
-            gui.click()
-            if gui.position() == (1280, 707):
-                break
+
+        self.adaptor.resetinput()
             
         self.frames.clear()
+
         for _ in range(self.shape["frame_stack"]):
             self.frames.append(frame)
         
         obs = np.stack(self.frames, axis=-1)
+
         self.time = time.time()
         self.last_score = 0
         self.step_count = 0
         self.frame_skip = 0
+
         return obs, {}
     
     def step(self, action):
         self.step_count += 1
         last = time.time()
-        reward = 0
-        
-        # Movement
-        max_movement_y = 75
-        max_movement_x = 200
-        dx = int(action[0] * max_movement_x)
-        dy = int(action[1] * max_movement_y)
-        directinput.moveRel(dx, dy, relative=True)
-        
-        # Click
-        if action[2] > 0.5:
-            gui.click()
-        
+
+        # game specific step logic
+        self.adaptor.stepinput(action)
+
         # Screen capture
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
-        
-        # Time check
-        if time.time() - 29.5 > self.time:
-            done = True
-        else: 
-            done = False
-        
-        # Safety check
-        x, y = gui.position()
-        if x != 1280 or y != 707:
-            done = True
-        
-        # OCR (every 20 steps)
-        if self.step_count % 20 == 0:
-            score = self._scorecap()
-            if score != "":
-                reward = (int(score) - self.last_score)
-                self.last_score = int(score)
-            else:
-                reward = 0
-        else:
-            reward = 0
-        
+
+        # game specific reward and done logic
+        reward = self.adaptor.rewardinput()
+        done = self.adaptor.isDone()
+
         # FPS cap
         dt = time.time() - last
         if dt < self.frame_time:

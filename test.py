@@ -1,8 +1,14 @@
 from stable_baselines3 import PPO
 from base_env import BaseEnv
 import time
+import yaml
 
-model = PPO.load("dino_ppo_final.zip")
+
+with open("config.yaml", 'r') as f:
+    config = yaml.safe_load(f)
+    game = config["game"]
+
+model = PPO.load(game + "_ppo_final.zip")
 
 env = BaseEnv()
 
