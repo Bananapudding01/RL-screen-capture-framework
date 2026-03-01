@@ -40,17 +40,23 @@ class BaseEnv(gym.Env):
             self.config = yaml.safe_load(f)
 
             self.game = self.config["game"]
-
-        self.action_space = spaces.Box(
-            low=np.array([-1.0, -1.0, 0.0]),
-            high=np.array([1.0, 1.0, 1.0]), 
-            shape=(3,),
-            dtype=np.float32
-        )
-
+            
         adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_adaptor.yaml"
         with open(adaptor_config_path, 'r') as f:
             self.adaptor_config = yaml.safe_load(f)
+
+            self.action_space_type = self.adaptor_config["actions"]["action_space"]
+
+            if self.action_space_type == "discrete":
+                self.action_space = spaces.Discrete(self.adaptor_config["actions"]["discrete_actions"])
+            elif self.action_space_type == "continuous":
+                self.action_space = spaces.Box(
+                    low=np.array(self.adaptor_config["actions"]["continuous_low"]),
+                    high=np.array(self.adaptor_config["actions"]["continuous_high"]),
+                    shape=(len(self.adaptor_config["actions"]["continuous_low"]),),
+                    dtype=np.float32
+                )
+
 
             self.game_cords = self.adaptor_config["game_region"]
             self.shape = self.adaptor_config["input_shape"]
