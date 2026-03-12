@@ -8,6 +8,11 @@ with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
     game = config["game"]
 
+adaptor_config_path = "adaptors/" + game + "/" + game + "_adaptor.yaml"
+with open(adaptor_config_path, 'r') as f:
+    adaptor_config = yaml.safe_load(f)
+    policy = str(adaptor_config["policy"]) + "Policy"
+
 if torch.backends.mps.is_available():
     device = "mps"
     print("Using Metal GPU (MPS)")
@@ -23,7 +28,7 @@ env = BaseEnv()
 
 print("Creating PPO model with optimized hyperparameters...")
 model = PPO(
-    "CnnPolicy",
+    policy,
     env,
     verbose=1,
     learning_rate=0.0001,

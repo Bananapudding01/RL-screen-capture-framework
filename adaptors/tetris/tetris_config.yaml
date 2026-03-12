@@ -1,4 +1,5 @@
 actions:
+  # discrete or continuous
   action_space: discrete
   continuous_high:
   - 1.0
@@ -16,14 +17,14 @@ game_over_pixel:
   left: 600
   top: 1000
 game_region:
-  height: 1440
-  left: 0
-  top: 0
-  width: 2560
+  height: 600
+  left: 730
+  top: 280
+  width: 300
 input_shape:
   frame_stack: 1
-  height: 81
-  width: 144
+  height: 20
+  width: 10
 preprocessing:
   fps: 20
   grayscale: true
@@ -32,3 +33,6 @@ score_capture:
   left: 200
   top: 170
   width: 100
+
+#Cnn or Mlp
+policy: Mlp

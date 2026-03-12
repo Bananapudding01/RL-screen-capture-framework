@@ -45,6 +45,8 @@ class BaseEnv(gym.Env):
         with open(adaptor_config_path, 'r') as f:
             self.adaptor_config = yaml.safe_load(f)
 
+            self.policy = self.adaptor_config["policy"]
+
             self.action_space_type = self.adaptor_config["actions"]["action_space"]
 
             if self.action_space_type == "discrete":
@@ -68,12 +70,25 @@ class BaseEnv(gym.Env):
         self.frame_time = 1 / self.preprocessing["fps"]
         self.scorecap_settings = self.adaptor_config["score_capture"]
 
-        self.observation_space = spaces.Box(
-            low=0, 
-            high=255,
-            shape=(self.shape["height"], self.shape["width"], self.shape["frame_stack"]),
-            dtype=np.uint8
+        if self.policy == "Cnn":
+            self.observation_space = spaces.Box(
+                low=0, 
+                high=255,
+                shape=(self.shape["height"], self.shape["width"], self.shape["frame_stack"]),
+                dtype=np.uint8
         )
+            
+        elif self.policy == "Mlp":
+            self.observation_space = spaces.Box(
+                low=0, 
+                high=255,
+                shape=(self.shape["height"] * self.shape["width"] * self.shape["frame_stack"],),
+                dtype=np.uint8
+        )
+        
+        else:
+            raise ValueError("Unsupported policy type in adaptor config: " + self.policy)
+        
         self.frames = deque(maxlen=self.shape["frame_stack"])
         self.time = time.time()
 
@@ -101,6 +116,9 @@ class BaseEnv(gym.Env):
             self.frames.append(frame)
         
         obs = np.stack(self.frames, axis=-1)
+        if self.policy == "Mlp":
+            obs = obs.flatten()
+
 
         self.time = time.time()
         self.last_score = 0
@@ -120,6 +138,8 @@ class BaseEnv(gym.Env):
         frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
+        if self.policy == "Mlp":
+            obs = obs.flatten()
 
         # game specific reward and done logic
         reward = self.adaptor.rewardinput()
