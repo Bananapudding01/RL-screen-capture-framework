@@ -21,9 +21,11 @@ else:
 print("Creating environment...")
 env = BaseEnv()
 
+policy = env.policy + "Policy"
+
 print("Creating PPO model with optimized hyperparameters...")
 model = PPO(
-    env.policy,
+    policy,
     env,
     verbose=1,
     learning_rate=0.0001,

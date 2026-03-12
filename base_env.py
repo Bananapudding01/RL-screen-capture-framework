@@ -15,10 +15,12 @@ OS = platform.system()
 
 class BaseEnv(gym.Env):
 
-    def _gamecap(self, cords, grayscaled, sizex, sizey):
+    def _gamecap(self, cords, grayscaled, sizex, sizey, blackwhite, threshold):
         game_capture = np.array(self.sct.grab(cords))
         if grayscaled == True:
             game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
+        if blackwhite == True:
+            _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         if sizex > 0:
             game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
         return game_capture
@@ -101,9 +103,11 @@ class BaseEnv(gym.Env):
         print("Resetting...")
         frame = self._gamecap(
             self.game_cords, 
-            True, 
+            self.preprocessing["grayscale"], 
             self.shape["width"], 
-            self.shape["height"]
+            self.shape["height"],
+            self.preprocessing["blackwhite"],
+            self.preprocessing["threshold"]
             )
         
         super().reset(seed=seed)
@@ -135,7 +139,14 @@ class BaseEnv(gym.Env):
         self.adaptor.stepinput(action)
 
         # Screen capture
-        frame = self._gamecap(self.game_cords, True, self.shape["width"], self.shape["height"])
+        frame = self._gamecap(
+            self.game_cords, 
+            self.preprocessing["grayscale"], 
+            self.shape["width"], 
+            self.shape["height"],
+            self.preprocessing["blackwhite"],
+            self.preprocessing["threshold"]
+            )
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
         if self.policy == "Mlp":

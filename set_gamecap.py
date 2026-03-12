@@ -85,6 +85,8 @@ while True:
     
     if adaptorConfig["preprocessing"]["grayscale"] == True:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if adaptorConfig["preprocessing"]["blackwhite"] == True:
+        _, img = cv2.threshold(img, adaptorConfig["preprocessing"]["threshold"], 255, cv2.THRESH_BINARY)
 
     cv2.imshow("preview", img)
     cv2.waitKey(1)

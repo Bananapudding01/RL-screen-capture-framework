@@ -28,6 +28,8 @@ input_shape:
 preprocessing:
   fps: 20
   grayscale: true
+  blackwhite: true
+  threshold: 128
 score_capture:
   height: 40
   left: 200
