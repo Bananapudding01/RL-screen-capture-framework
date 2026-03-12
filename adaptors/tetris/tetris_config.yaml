@@ -1,5 +1,4 @@
 actions:
-  # discrete or continuous
   action_space: discrete
   continuous_high:
   - 1.0
@@ -25,16 +24,14 @@ input_shape:
   frame_stack: 1
   height: 20
   width: 10
+policy: Mlp
 preprocessing:
+  blackwhite: true
   fps: 20
   grayscale: true
-  blackwhite: true
-  threshold: 128
+  threshold: 80
 score_capture:
   height: 40
   left: 200
   top: 170
   width: 100
-
-#Cnn or Mlp
-policy: Mlp

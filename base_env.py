@@ -20,9 +20,11 @@ class BaseEnv(gym.Env):
         if grayscaled == True:
             game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
         if blackwhite == True:
-            _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
+            game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         if sizex > 0:
             game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
+        if blackwhite == True:
+            game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         return game_capture
         
     def _scorecap(self):
@@ -88,8 +90,7 @@ class BaseEnv(gym.Env):
                 dtype=np.uint8
         )
         
-        else:
-            raise ValueError("Unsupported policy type in adaptor config: " + self.policy)
+        else: raise ValueError("Unsupported policy type in adaptor config: " + self.policy)
         
         self.frames = deque(maxlen=self.shape["frame_stack"])
         self.time = time.time()

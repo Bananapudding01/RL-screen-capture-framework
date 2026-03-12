@@ -78,13 +78,18 @@ while True:
     height, width = img.shape[:2]
     ratio = height / width
     targetHeight = int(targetWidth * ratio)
+    
+    if adaptorConfig["preprocessing"]["grayscale"] == True:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    if adaptorConfig["preprocessing"]["blackwhite"] == True:
+        _, img = cv2.threshold(img, adaptorConfig["preprocessing"]["threshold"], 255, cv2.THRESH_BINARY)
+
     img = cv2.resize(
         img, 
         (targetWidth, targetHeight), 
          interpolation=cv2.INTER_NEAREST)
     
-    if adaptorConfig["preprocessing"]["grayscale"] == True:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if adaptorConfig["preprocessing"]["blackwhite"] == True:
         _, img = cv2.threshold(img, adaptorConfig["preprocessing"]["threshold"], 255, cv2.THRESH_BINARY)
 
