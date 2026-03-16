@@ -1,0 +1,37 @@
+actions:
+  action_space: discrete
+  continuous_high:
+  - 1.0
+  - 1.0
+  - 1.0
+  continuous_low:
+  - -1.0
+  - -1.0
+  - 0.0
+  discrete_actions: 4
+game_over_pixel:
+  BLUE: 6
+  GREEN: 6
+  RED: 6
+  left: 600
+  top: 1000
+game_region:
+  height: 600
+  left: 730
+  top: 280
+  width: 300
+input_shape:
+  frame_stack: 1
+  height: 20
+  width: 10
+policy: Mlp
+preprocessing:
+  blackwhite: true
+  fps: 20
+  grayscale: true
+  threshold: 80
+score_capture:
+  height: 40
+  left: 200
+  top: 170
+  width: 100

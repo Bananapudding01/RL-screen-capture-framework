@@ -58,7 +58,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps= 250000,
+        total_timesteps= 5000,
         callback=checkpoint_callback,
         progress_bar=True
     )
@@ -74,4 +74,4 @@ except KeyboardInterrupt:
 print("\nTo test your model, run:")
 print("  python test.py")
 print("\nTo view tensorboard, run: tensorboard --logdir ./" + game + "_tensorboard/")
-print("\nThen open: http://localhost:6006")                     
+print("\nThen open: http://localhost:6006")

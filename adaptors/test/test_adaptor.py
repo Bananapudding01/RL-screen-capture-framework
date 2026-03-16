@@ -4,7 +4,7 @@ from PIL import Image
 
 class GameAdaptor:
     def __init__(self, env):
-        print("TetrisAdaptor initialized")
+        print("TestAdaptor initialized")
 
     def resetinput(self):
         print("reset input")
@@ -13,9 +13,7 @@ class GameAdaptor:
         print("step input")
 
     def rewardinput(self):
-        print("reward input")
         return 1
 
     def isDone(self):
-        print("is done")
         return False

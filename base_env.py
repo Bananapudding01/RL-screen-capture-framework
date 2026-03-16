@@ -154,8 +154,8 @@ class BaseEnv(gym.Env):
             obs = obs.flatten()
 
         # game specific reward and done logic
-        reward = self.adaptor.rewardinput()
         done = self.adaptor.isDone()
+        reward = self.adaptor.rewardinput()
 
         # FPS cap
         dt = time.time() - last
