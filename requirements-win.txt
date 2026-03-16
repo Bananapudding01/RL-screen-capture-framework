@@ -14,7 +14,7 @@ pyautogui
  
 # RL
 gymnasium
-stable-baselines3
+stable-baselines3[extra]
  
 # Monitoring
 tensorboard
