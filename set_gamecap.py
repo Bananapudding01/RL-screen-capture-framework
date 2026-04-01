@@ -2,6 +2,7 @@ import yaml
 import cv2
 import mss
 import numpy as np
+import pygetwindow as getwindow
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
@@ -14,6 +15,9 @@ with open(adaptorPath, 'r') as f:
     adaptorConfig = yaml.safe_load(f)
 
 game_region = adaptorConfig["game_region"]
+application = adaptorConfig["application_name"]
+x, y = getwindow(application)
+
 sct = mss.mss()
 command = ""
 print("Set gamecap cords:")
@@ -26,10 +30,10 @@ while True:
         break
     elif command == "top":
         command = input("top: ")
-        adaptorConfig["game_region"]["top"] = int(command)
+        adaptorConfig["game_region" + y]["top"] = int(command)
     elif command == "left":
         command = input("left: ")
-        adaptorConfig["game_region"]["left"] = int(command)
+        adaptorConfig["game_region" + x]["left"] = int(command)
     elif command == "width":
         command = input("width: ")
         adaptorConfig["game_region"]["width"] = int(command)
@@ -66,7 +70,11 @@ while True:
             adaptorConfig["preprocessing"]["grayscale"] = False
 
 
-    img = np.array(sct.grab(adaptorConfig["game_region"]))
+    tal, ex, why, wid = adaptorConfig["game_region"]
+    ex += x
+    why += y
+
+    img = np.array(sct.grab(tal, ex, why, wid))
     
     img = cv2.resize(
         img, 
