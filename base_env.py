@@ -11,20 +11,24 @@ from collections import deque
 import yaml
 import importlib
 import platform
+import pygetwindow as getwindow
 OS = platform.system()
 
 class BaseEnv(gym.Env):
 
-    def _gamecap(self, cords, grayscaled, sizex, sizey, blackwhite, threshold):
-        game_capture = np.array(self.sct.grab(cords))
-        if grayscaled == True:
-            game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
-        if blackwhite == True:
-            _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
-        if sizex > 0:
-            game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
-        if blackwhite == True:
-            _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
+    def _gamecap(self, cords, grayscaled, sizex, sizey, blackwhite, threshold, application):
+        x, y = getwindow(application)
+
+        realposition = [cords[0], cords[1] + x, cords[2] + y, cords[3]]
+
+        game_capture = np.array(self.sct.grab(realposition))
+
+
+
+        if grayscaled == True: game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
+        if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
+        if sizex > 0: game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
+        if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         return game_capture
         
     def _scorecap(self):
@@ -51,6 +55,8 @@ class BaseEnv(gym.Env):
 
             self.policy = self.adaptor_config["policy"]
 
+            self.application = self.adaptor_config["application_name"]
+
             self.action_space_type = self.adaptor_config["actions"]["action_space"]
 
             if self.action_space_type == "discrete":
@@ -63,8 +69,7 @@ class BaseEnv(gym.Env):
                     dtype=np.float32
                 )
 
-
-            self.game_cords = self.adaptor_config["game_region"]
+            self.game_offset = self.adaptor_config["game_region"]
             self.shape = self.adaptor_config["input_shape"]
             self.frame_stack_size = self.shape["frame_stack"]
 
@@ -103,12 +108,13 @@ class BaseEnv(gym.Env):
     def reset(self, seed=None, options=None):
         print("Resetting...")
         frame = self._gamecap(
-            self.game_cords, 
+            self.game_region, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
             self.shape["height"],
             self.preprocessing["blackwhite"],
-            self.preprocessing["threshold"]
+            self.preprocessing["threshold"],
+            self.application
             )
         
         super().reset(seed=seed)
@@ -141,12 +147,13 @@ class BaseEnv(gym.Env):
 
         # Screen capture
         frame = self._gamecap(
-            self.game_cords, 
+            self.game_region, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
             self.shape["height"],
             self.preprocessing["blackwhite"],
-            self.preprocessing["threshold"]
+            self.preprocessing["threshold"],
+            self.application
             )
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)

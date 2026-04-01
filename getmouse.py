@@ -2,6 +2,10 @@ import pyautogui
 import time
 import sys
 
+import pygetwindow as gw
+
+print(gw.getAllTitles())
+
 while True:
     x, y = pyautogui.position()
     pixel = pyautogui.pixel(x, y)

@@ -35,3 +35,4 @@ score_capture:
   left: 200
   top: 170
   width: 100
+  application_name: "'Mesen - Tetris (USA)"
