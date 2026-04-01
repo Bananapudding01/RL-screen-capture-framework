@@ -9,6 +9,7 @@ actions:
   - -1.0
   - 0.0
   discrete_actions: 4
+application_name: Mesen - Tetris (USA)
 game_over_pixel:
   BLUE: 6
   GREEN: 6
@@ -16,10 +17,10 @@ game_over_pixel:
   left: 600
   top: 1000
 game_region:
-  height: 600
-  left: 730
-  top: 280
-  width: 300
+  height: 350
+  left: 320
+  top: 155
+  width: 170
 input_shape:
   frame_stack: 1
   height: 20
@@ -29,10 +30,9 @@ preprocessing:
   blackwhite: true
   fps: 20
   grayscale: true
-  threshold: 80
+  threshold: 40
 score_capture:
   height: 40
   left: 200
   top: 170
   width: 100
-  application_name: "Mesen - Tetris (USA)"
