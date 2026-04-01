@@ -8,7 +8,7 @@ actions:
   - -1.0
   - -1.0
   - 0.0
-  discrete_actions: 4
+  discrete_actions: 40
 application_name: Mesen - Tetris (USA)
 game_over_pixel:
   BLUE: 6
