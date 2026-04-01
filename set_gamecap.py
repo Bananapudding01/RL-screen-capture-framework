@@ -16,7 +16,7 @@ with open(adaptorPath, 'r') as f:
 
 game_region = adaptorConfig["game_region"]
 application = adaptorConfig["application_name"]
-x, y = getwindow(application)
+window = getwindow.getWindowsWithTitle(application)
 
 sct = mss.mss()
 command = ""
@@ -30,10 +30,10 @@ while True:
         break
     elif command == "top":
         command = input("top: ")
-        adaptorConfig["game_region" + y]["top"] = int(command)
+        adaptorConfig["game_region"]["top"] = int(command) - window.y
     elif command == "left":
         command = input("left: ")
-        adaptorConfig["game_region" + x]["left"] = int(command)
+        adaptorConfig["game_region"]["left"] = int(command) - window.x
     elif command == "width":
         command = input("width: ")
         adaptorConfig["game_region"]["width"] = int(command)
@@ -71,8 +71,8 @@ while True:
 
 
     tal, ex, why, wid = adaptorConfig["game_region"]
-    ex += x
-    why += y
+    ex += window.x
+    why += window.y
 
     img = np.array(sct.grab(tal, ex, why, wid))
     

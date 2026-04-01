@@ -17,13 +17,12 @@ OS = platform.system()
 class BaseEnv(gym.Env):
 
     def _gamecap(self, cords, grayscaled, sizex, sizey, blackwhite, threshold, application):
-        x, y = getwindow(application)
 
-        realposition = [cords[0], cords[1] + x, cords[2] + y, cords[3]]
+        window = getwindow.getWindowsWithTitle(application)
+
+        realposition = [cords["height"], cords["left"] + window.x, cords["top"] + window.y, cords["width"]]
 
         game_capture = np.array(self.sct.grab(realposition))
-
-
 
         if grayscaled == True: game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
         if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
@@ -108,7 +107,7 @@ class BaseEnv(gym.Env):
     def reset(self, seed=None, options=None):
         print("Resetting...")
         frame = self._gamecap(
-            self.game_region, 
+            self.game_offset, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
             self.shape["height"],
