@@ -17,12 +17,16 @@ OS = platform.system()
 class BaseEnv(gym.Env):
 
     def _gamecap(self, cords, grayscaled, sizex, sizey, blackwhite, threshold, application):
+        window = getwindow.getWindowsWithTitle(application)[0]
 
-        window = getwindow.getWindowsWithTitle(application)
+        game_cords = {
+            'left':   window.left + cords['left'],
+            'top':    window.top  + cords['top'],
+            'width':  cords['width'],
+            'height': cords['height']
+        }
 
-        realposition = [cords["height"], cords["left"] + window.x, cords["top"] + window.y, cords["width"]]
-
-        game_capture = np.array(self.sct.grab(realposition))
+        game_capture = np.array(self.sct.grab(game_cords))
 
         if grayscaled == True: game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
         if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
@@ -31,9 +35,7 @@ class BaseEnv(gym.Env):
         return game_capture
         
     def _scorecap(self):
-        game_capture = np.array(self.sct.grab(
-            self.scorecap_settings
-            ))
+        game_capture = np.array(self.sct.grab(self.scorecap_settings))
         img = Image.fromarray(game_capture)
         score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')
         return score_text
@@ -42,10 +44,8 @@ class BaseEnv(gym.Env):
         super(BaseEnv, self).__init__()
         self.sct = mss.mss()
         
-        # load base config file
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
-
             self.game = self.config["game"]
 
         adaptor_config_path = "adaptors/" + self.game + "/" + self.game + "_config.yaml"
@@ -53,9 +53,7 @@ class BaseEnv(gym.Env):
             self.adaptor_config = yaml.safe_load(f)
 
             self.policy = self.adaptor_config["policy"]
-
             self.application = self.adaptor_config["application_name"]
-
             self.action_space_type = self.adaptor_config["actions"]["action_space"]
 
             if self.action_space_type == "discrete":
@@ -84,22 +82,20 @@ class BaseEnv(gym.Env):
                 high=255,
                 shape=(self.shape["height"], self.shape["width"], self.shape["frame_stack"]),
                 dtype=np.uint8
-        )
-            
+            )
         elif self.policy == "Mlp":
             self.observation_space = spaces.Box(
                 low=0, 
                 high=255,
                 shape=(self.shape["height"] * self.shape["width"] * self.shape["frame_stack"],),
                 dtype=np.uint8
-        )
-        
-        else: raise ValueError("Unsupported policy type in adaptor config: " + self.policy)
+            )
+        else:
+            raise ValueError("Unsupported policy type in adaptor config: " + self.policy)
         
         self.frames = deque(maxlen=self.shape["frame_stack"])
         self.time = time.time()
 
-        # initialize adaptor class for game-specific logic
         path = "adaptors." + self.game + "." + self.game + "_adaptor"
         module = importlib.import_module(path)
         self.adaptor = module.GameAdaptor(self)
@@ -114,12 +110,10 @@ class BaseEnv(gym.Env):
             self.preprocessing["blackwhite"],
             self.preprocessing["threshold"],
             self.application
-            )
+        )
         
         super().reset(seed=seed)
-
         self.adaptor.resetinput()
-            
         self.frames.clear()
 
         for _ in range(self.shape["frame_stack"]):
@@ -128,7 +122,6 @@ class BaseEnv(gym.Env):
         obs = np.stack(self.frames, axis=-1)
         if self.policy == "Mlp":
             obs = obs.flatten()
-
 
         self.time = time.time()
         self.last_score = 0
@@ -141,29 +134,25 @@ class BaseEnv(gym.Env):
         self.step_count += 1
         last = time.time()
 
-        # game specific step logic
         self.adaptor.stepinput(action)
 
-        # Screen capture
         frame = self._gamecap(
-            self.game_region, 
+            self.game_offset, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
             self.shape["height"],
             self.preprocessing["blackwhite"],
             self.preprocessing["threshold"],
             self.application
-            )
+        )
         self.frames.append(frame)
         obs = np.stack(self.frames, axis=-1)
         if self.policy == "Mlp":
             obs = obs.flatten()
 
-        # game specific reward and done logic
         done = self.adaptor.isDone()
         reward = self.adaptor.rewardinput()
 
-        # FPS cap
         dt = time.time() - last
         if dt < self.frame_time:
             time.sleep(self.frame_time - dt)

@@ -3,10 +3,13 @@ import cv2
 import mss
 import numpy as np
 import pygetwindow as getwindow
+import threading
+import ctypes
+
+ctypes.windll.shcore.SetProcessDpiAwareness(0)
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
-
     game = config["game"]
 
 adaptorPath = "adaptors/" + game + "/" + game + "_config.yaml"
@@ -14,97 +17,121 @@ adaptorPath = "adaptors/" + game + "/" + game + "_config.yaml"
 with open(adaptorPath, 'r') as f:
     adaptorConfig = yaml.safe_load(f)
 
-game_region = adaptorConfig["game_region"]
 application = adaptorConfig["application_name"]
-window = getwindow.getWindowsWithTitle(application)
+window = getwindow.getWindowsWithTitle(application)[0]
 
 sct = mss.mss()
-command = ""
-print("Set gamecap cords:")
+
+# shared state for the preview thread
+preview_mode = "raw"   # "raw" or "processed"
+running = True
+
+def get_real_cords(region):
+    return {
+        'left':   window.left + region['left'],
+        'top':    window.top  + region['top'],
+        'width':  region['width'],
+        'height': region['height']
+    }
+
+def preview_loop():
+    local_sct = mss.mss()
+    while running:
+        try:
+            img = np.array(local_sct.grab(get_real_cords(adaptorConfig["game_region"])))
+
+            if preview_mode == "processed":
+                img = cv2.resize(
+                    img,
+                    (adaptorConfig["input_shape"]["width"],
+                     adaptorConfig["input_shape"]["height"]),
+                    interpolation=cv2.INTER_AREA)
+
+                if adaptorConfig["preprocessing"]["grayscale"]:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+                if adaptorConfig["preprocessing"]["blackwhite"]:
+                    _, img = cv2.threshold(
+                        img,
+                        adaptorConfig["preprocessing"]["threshold"],
+                        255,
+                        cv2.THRESH_BINARY)
+
+                targetWidth = 300
+                h, w = img.shape[:2]
+                targetHeight = int(targetWidth * (h / w))
+                img = cv2.resize(img, (targetWidth, targetHeight), interpolation=cv2.INTER_NEAREST)
+
+            cv2.imshow("preview", img)
+            cv2.waitKey(1)
+        except Exception:
+            pass
+
+thread = threading.Thread(target=preview_loop, daemon=True)
+thread.start()
+
+# --- Stage 1: capture region ---
+print("\nStage 1: Set capture region")
+print("Commands: top / left / width / height / next / quit")
 while True:
+    command = input("command --> ").strip().lower()
 
     if command == "quit":
+        running = False
         cv2.destroyAllWindows()
         exit()
     elif command == "next":
         break
     elif command == "top":
-        command = input("top: ")
-        adaptorConfig["game_region"]["top"] = int(command) - window.y
+        val = input("top offset: ")
+        adaptorConfig["game_region"]["top"] = int(val)
     elif command == "left":
-        command = input("left: ")
-        adaptorConfig["game_region"]["left"] = int(command) - window.x
+        val = input("left offset: ")
+        adaptorConfig["game_region"]["left"] = int(val)
     elif command == "width":
-        command = input("width: ")
-        adaptorConfig["game_region"]["width"] = int(command)
+        val = input("width: ")
+        adaptorConfig["game_region"]["width"] = int(val)
     elif command == "height":
-        command = input("height: ")
-        adaptorConfig["game_region"]["height"] = int(command)
+        val = input("height: ")
+        adaptorConfig["game_region"]["height"] = int(val)
+    else:
+        print("Unknown command")
 
-    img = np.array(sct.grab(adaptorConfig["game_region"]))
-    cv2.imshow("preview", img)
-    cv2.waitKey(1)
-
-    command = input("command --> ")
-
-command = ""   
-print("set preprocessing:")
+# --- Stage 2: preprocessing ---
+preview_mode = "processed"
+print("\nStage 2: Set preprocessing")
+print("Commands: height / width / gray / blackwhite / threshold / next / quit")
 while True:
+    command = input("command --> ").strip().lower()
 
     if command == "quit":
+        running = False
         cv2.destroyAllWindows()
         exit()
     elif command == "next":
         break
     elif command == "height":
-        command = input("height: ")
-        adaptorConfig["input_shape"]["height"] = int(command)
+        val = input("height: ")
+        adaptorConfig["input_shape"]["height"] = int(val)
     elif command == "width":
-        command = input("width: ")
-        adaptorConfig["input_shape"]["width"] = int(command)
+        val = input("width: ")
+        adaptorConfig["input_shape"]["width"] = int(val)
     elif command == "gray":
-        command = input("grayscale: ")
-        if command == "true":
-            adaptorConfig["preprocessing"]["grayscale"] = True
-        elif command == "false":
-            adaptorConfig["preprocessing"]["grayscale"] = False
+        val = input("grayscale (true/false): ")
+        adaptorConfig["preprocessing"]["grayscale"] = val == "true"
+    elif command == "blackwhite":
+        val = input("blackwhite (true/false): ")
+        adaptorConfig["preprocessing"]["blackwhite"] = val == "true"
+    elif command == "threshold":
+        val = input("threshold (0-255): ")
+        adaptorConfig["preprocessing"]["threshold"] = int(val)
+    else:
+        print("Unknown command")
 
-
-    tal, ex, why, wid = adaptorConfig["game_region"]
-    ex += window.x
-    why += window.y
-
-    img = np.array(sct.grab(tal, ex, why, wid))
-    
-    img = cv2.resize(
-        img, 
-        (adaptorConfig["input_shape"]["width"], 
-         adaptorConfig["input_shape"]["height"]), 
-         interpolation=cv2.INTER_AREA)
-
-    targetWidth = 300
-    height, width = img.shape[:2]
-    ratio = height / width
-    targetHeight = int(targetWidth * ratio)
-    
-    if adaptorConfig["preprocessing"]["grayscale"] == True:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    if adaptorConfig["preprocessing"]["blackwhite"] == True:
-        _, img = cv2.threshold(img, adaptorConfig["preprocessing"]["threshold"], 255, cv2.THRESH_BINARY)
-
-    img = cv2.resize(
-        img, 
-        (targetWidth, targetHeight), 
-         interpolation=cv2.INTER_NEAREST)
-    
-    if adaptorConfig["preprocessing"]["blackwhite"] == True:
-        _, img = cv2.threshold(img, adaptorConfig["preprocessing"]["threshold"], 255, cv2.THRESH_BINARY)
-
-    cv2.imshow("preview", img)
-    cv2.waitKey(1)
-    command = input("command --> ")
-
+running = False
 cv2.destroyAllWindows()
+
 with open(adaptorPath, 'w') as f:
     yaml.dump(adaptorConfig, f, default_flow_style=False)
+
+print("Saved to " + adaptorPath)
