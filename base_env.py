@@ -102,7 +102,7 @@ class BaseEnv(gym.Env):
     
     def reset(self, seed=None, options=None):
         print("Resetting...")
-        frame = self._gamecap(
+        self.frame = self._gamecap(
             self.game_offset, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
@@ -117,7 +117,7 @@ class BaseEnv(gym.Env):
         self.frames.clear()
 
         for _ in range(self.shape["frame_stack"]):
-            self.frames.append(frame)
+            self.frames.append(self.frame)
         
         obs = np.stack(self.frames, axis=-1)
         if self.policy == "Mlp":
@@ -136,7 +136,7 @@ class BaseEnv(gym.Env):
 
         self.adaptor.stepinput(action)
 
-        frame = self._gamecap(
+        self.frame = self._gamecap(
             self.game_offset, 
             self.preprocessing["grayscale"], 
             self.shape["width"], 
@@ -145,7 +145,7 @@ class BaseEnv(gym.Env):
             self.preprocessing["threshold"],
             self.application
         )
-        self.frames.append(frame)
+        self.frames.append(self.frame)
         obs = np.stack(self.frames, axis=-1)
         if self.policy == "Mlp":
             obs = obs.flatten()

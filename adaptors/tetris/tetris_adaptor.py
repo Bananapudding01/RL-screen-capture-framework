@@ -31,8 +31,11 @@ class GameAdaptor:
             gui.press("down")
 
     def rewardinput(self):
-        print("reward input")
-        return 1
+        frame = self.frame > 0
+
+
+
+        
 
     def isDone(self):
         print("is done")
