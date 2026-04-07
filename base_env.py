@@ -35,6 +35,7 @@ class BaseEnv(gym.Env):
         return game_capture
         
     def _scorecap(self):
+        
         game_capture = np.array(self.sct.grab(self.scorecap_settings))
         img = Image.fromarray(game_capture)
         score_text = pytesseract.image_to_string(img, config='--psm 7 -c tessedit_char_whitelist=0123456789')

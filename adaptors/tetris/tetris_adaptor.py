@@ -5,6 +5,8 @@ import pyautogui as gui
 
 class GameAdaptor:
     def __init__(self, env):
+        self.total_holes = 0
+        self.env = env
         print("TetrisAdaptor initialized")
 
     def resetinput(self):
@@ -31,11 +33,34 @@ class GameAdaptor:
             gui.press("down")
 
     def rewardinput(self):
-        frame = self.frame > 0
-
-
-
+        frame = self.env.frame > 0
         
+        #calculating number of holes
+
+        totalholes = 0
+
+        for column in frame.T:
+            holes = 0
+            under = False
+            
+            for block in column:
+                if not under:
+                    if block:
+                        under = True
+                else:
+                    if not block:
+                        holes += 1
+
+            totalholes += holes
+        
+        change = totalholes - self.total_holes
+        self.total_holes = totalholes
+
+        penalty = (change ** 2) * 20
+        if change > 0: penalty = penalty * -1
+
+        reward = 10 - penalty
+        return reward
 
     def isDone(self):
         print("is done")
