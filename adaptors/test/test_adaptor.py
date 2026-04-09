@@ -1,7 +1,3 @@
-import numpy as np
-import pytesseract
-from PIL import Image
-
 class GameAdaptor:
     def __init__(self, env):
         print("TestAdaptor initialized")

@@ -4,9 +4,11 @@ import mss
 import numpy as np
 import pygetwindow as getwindow
 import threading
-import ctypes
+import platform
 
-ctypes.windll.shcore.SetProcessDpiAwareness(0)
+if platform.system() == "Windows":
+    import ctypes
+    ctypes.windll.shcore.SetProcessDpiAwareness(0)
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)

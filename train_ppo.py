@@ -1,5 +1,5 @@
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common.callbacks import CheckpointCallback
 from base_env import BaseEnv
 import torch
 import yaml
@@ -35,7 +35,7 @@ model = PPO(
     gamma=0.99, 
     gae_lambda=0.95,
     clip_range=0.2,
-    ent_coef=0.05 ,
+    ent_coef=0.05,
     vf_coef=0.5,
     max_grad_norm=0.5,
     tensorboard_log="./" + game + "_tensorboard/",
@@ -47,7 +47,7 @@ frequency = 20000
 checkpoint_callback = CheckpointCallback(
     save_freq=frequency,
     save_path="./checkpoints/",
-    name_prefix= game + "_model"
+    name_prefix=game + "_model"
 )
 
 print("\nStarting training...")
@@ -58,7 +58,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps= 5000,
+        total_timesteps=5000,
         callback=checkpoint_callback,
         progress_bar=True
     )

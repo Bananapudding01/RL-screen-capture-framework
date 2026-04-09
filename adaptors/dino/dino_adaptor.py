@@ -1,8 +1,4 @@
-import numpy as np
-import pytesseract
-from PIL import Image
 import pyautogui as gui
-import time
 
 class GameAdaptor:
     def __init__(self, env):
@@ -21,7 +17,7 @@ class GameAdaptor:
         if action == 0:
             gui.keyUp("down")
             gui.keyDown("up")
-        elif action == 0:
+        elif action == 1:
             gui.keyUp("up")
             gui.keyDown("down")
         else:

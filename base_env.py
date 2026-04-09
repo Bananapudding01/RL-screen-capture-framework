@@ -3,16 +3,13 @@ import time
 import cv2 
 import gymnasium as gym
 from gymnasium import spaces
-import pyautogui as gui
 from PIL import Image
 import pytesseract
 import numpy as np
 from collections import deque
 import yaml
 import importlib
-import platform
 import pygetwindow as getwindow
-OS = platform.system()
 
 class BaseEnv(gym.Env):
 
@@ -28,10 +25,9 @@ class BaseEnv(gym.Env):
 
         game_capture = np.array(self.sct.grab(game_cords))
 
-        if grayscaled == True: game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
-        if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
+        if grayscaled: game_capture = cv2.cvtColor(game_capture, cv2.COLOR_BGR2GRAY)
+        if blackwhite: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         if sizex > 0: game_capture = cv2.resize(game_capture, (sizex, sizey), interpolation=cv2.INTER_AREA)
-        if blackwhite == True: _, game_capture = cv2.threshold(game_capture, threshold, 255, cv2.THRESH_BINARY)
         return game_capture
         
     def _scorecap(self):

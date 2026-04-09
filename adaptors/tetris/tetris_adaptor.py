@@ -1,8 +1,4 @@
-import numpy as np
-import pytesseract
-from PIL import Image
 import pydirectinput as gui
-import time
 
 class GameAdaptor:
     def __init__(self, env):
@@ -46,7 +42,7 @@ class GameAdaptor:
             if not pixel:
                 done = False
 
-        if done == True:
+        if done:
             return -200
 
 
@@ -80,5 +76,4 @@ class GameAdaptor:
             if not pixel:
                 done = False
 
-        if done == True:
-            return -200
+        return done

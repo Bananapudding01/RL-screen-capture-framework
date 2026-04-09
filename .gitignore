@@ -25,7 +25,7 @@ venv.bak/
 
 # Training outputs
 checkpoints/
-dino_tensorboard/
+*_tensorboard/
 *.zip
 *.pth
 *.pt

@@ -32,7 +32,6 @@ Screen Capture  -->  Preprocessing  -->  RL Agent (PPO)  -->  Keyboard/Mouse Inp
 ├── set_scorecap.py             # Interactive tool to calibrate score capture region
 ├── getmouse.py                 # Mouse position & pixel color debug tool (Windows)
 ├── pixelcolor.py               # Pixel color inspector
-├── input_test.py               # Input system test
 ├── requirements-mac.txt        # Dependencies for macOS
 ├── requirements-win.txt        # Dependencies for Windows
 └── adaptors/
@@ -249,7 +248,6 @@ Each game has a pluggable **adaptor** — a Python class called `GameAdaptor` th
 | `set_scorecap.py` | All | Interactive score region calibration with live preview |
 | `getmouse.py` | Windows | Prints mouse position and pixel color continuously |
 | `pixelcolor.py` | All | Prints cursor position and pixel color |
-| `input_test.py` | All | Tests pyautogui keyboard input |
 
 ## Platform Notes
 
