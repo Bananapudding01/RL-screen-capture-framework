@@ -11,6 +11,7 @@ pytesseract
  
 # Input
 pyautogui
+pydirectinput
  
 # RL
 gymnasium

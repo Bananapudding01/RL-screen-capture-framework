@@ -1,7 +1,8 @@
 import numpy as np
 import pytesseract
 from PIL import Image
-import pyautogui as gui
+import pydirectinput as gui
+import time
 
 class GameAdaptor:
     def __init__(self, env):
@@ -10,11 +11,12 @@ class GameAdaptor:
         print("TetrisAdaptor initialized")
 
     def resetinput(self):
-        print("reset input")
+        gui.press("space")
+        gui.press("space")
     
     def stepinput(self, action):
 
-        gui.PAUSE = 0
+        gui.PAUSE = 0.00
 
         moves = action % 10
         rotation = (action // 10)
@@ -38,6 +40,15 @@ class GameAdaptor:
         #calculating number of holes
 
         totalholes = 0
+
+        done = True
+        for pixel in frame[0]:
+            if not pixel:
+                done = False
+
+        if done == True:
+            return -200
+
 
         for column in frame.T:
             holes = 0
@@ -63,5 +74,11 @@ class GameAdaptor:
         return reward
 
     def isDone(self):
-        print("is done")
-        return False
+        frame = self.env.frame > 0
+        done = True
+        for pixel in frame[0]:
+            if not pixel:
+                done = False
+
+        if done == True:
+            return -200

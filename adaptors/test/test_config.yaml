@@ -27,7 +27,7 @@ input_shape:
 policy: Mlp
 preprocessing:
   blackwhite: true
-  fps: 20
+  fps: 30
   grayscale: true
   threshold: 80
 score_capture:

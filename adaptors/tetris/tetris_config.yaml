@@ -17,10 +17,10 @@ game_over_pixel:
   left: 600
   top: 1000
 game_region:
-  height: 350
-  left: 320
-  top: 155
-  width: 170
+  height: 322
+  left: 200
+  top: 150
+  width: 160
 input_shape:
   frame_stack: 1
   height: 20
@@ -28,7 +28,7 @@ input_shape:
 policy: Mlp
 preprocessing:
   blackwhite: true
-  fps: 20
+  fps: 30
   grayscale: true
   threshold: 40
 score_capture:
