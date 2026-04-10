@@ -19,6 +19,7 @@ stable-baselines3[extra]
  
 # Monitoring
 tensorboard
+setuptools<81
  
 # PyTorch (CUDA) - install separately with:
 # pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121

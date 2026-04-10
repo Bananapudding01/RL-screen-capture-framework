@@ -29,7 +29,7 @@ model = PPO(
     env,
     verbose=1,
     learning_rate=0.0001,
-    n_steps=512,
+    n_steps=256,
     batch_size=64,
     n_epochs=10,
     gamma=0.99, 
@@ -58,7 +58,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps= 5000,
+        total_timesteps= 10000,
         callback=checkpoint_callback,
         progress_bar=True
     )

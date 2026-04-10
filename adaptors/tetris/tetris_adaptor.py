@@ -9,14 +9,16 @@ class GameAdaptor:
         self.total_holes = 0
         self.env = env
         print("TetrisAdaptor initialized")
+        gui.PAUSE = 0.01
 
     def resetinput(self):
-        gui.press("space")
-        gui.press("space")
+        print("Resetting...")
+        time.sleep(0.1)
+        gui.press("f1")
+        gui.press("enter")
+        self.total_holes = 0
     
     def stepinput(self, action):
-
-        gui.PAUSE = 0.00
 
         moves = action % 10
         rotation = (action // 10)
@@ -30,9 +32,7 @@ class GameAdaptor:
         else:
             for i in range(moves - 4):
                 gui.press("right")
-
-        for i in range(20):
-            gui.press("down")
+        gui.press("down")
 
     def rewardinput(self):
         frame = self.env.frame > 0
@@ -67,10 +67,11 @@ class GameAdaptor:
         change = totalholes - self.total_holes
         self.total_holes = totalholes
 
-        penalty = (change ** 2) * 20
-        if change > 0: penalty = penalty * -1
+        penalty = (change * 10)
 
         reward = 10 - penalty
+        print("total holes: " + str(self.total_holes))
+        print("reward: " + str(reward))
         return reward
 
     def isDone(self):
@@ -80,5 +81,4 @@ class GameAdaptor:
             if not pixel:
                 done = False
 
-        if done == True:
-            return -200
+        return done
