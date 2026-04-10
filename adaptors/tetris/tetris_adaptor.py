@@ -33,9 +33,11 @@ class GameAdaptor:
             for i in range(moves - 4):
                 gui.press("right")
         gui.press("down")
+        time.sleep(0.03)
 
     def rewardinput(self):
-        frame = self.env.frame > 0
+        rawframe = self.env.frame > 0
+        frame = rawframe[2:]
         
         #calculating number of holes
 
