@@ -2,22 +2,25 @@ import pydirectinput as gui
 import time
 import random
 
-time.sleep(2)
+FRAME = 1/30
+
+gui.PAUSE = 1/60
+
+time.sleep(5)
+
+ACTION_NAMES = ["nothing", "left", "right", "rotate"]
 
 while True:
-    gui.PAUSE = 0.01
-    action = random.randint(0, 39)
-    action = 15
+    action = random.randint(0, 3)
+    print(f"Action: {ACTION_NAMES[action]}")
 
-    moves = action % 10
-    rotation = (action // 10)
-    for i in range(rotation):
-        gui.press("up") 
-    if moves < 5:
-        for i in range(moves + 1):
-            gui.press("left")
-    else:
-        for i in range(moves - 4):
-            gui.press("right")
-
-    gui.press("down")
+    if action == 0:
+        pass
+    elif action == 1:
+        gui.press("left")
+    elif action == 2:
+        gui.press("right")
+    elif action == 3:
+        gui.press("up")
+    
+    #time.sleep(FRAME)

@@ -1,8 +1,17 @@
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common.callbacks import CheckpointCallback
 from base_env import BaseEnv
 import torch
 import yaml
+import sys
+
+#if len(sys.argv) < 2:
+    #print("Usage: python continue_training.py <path_to_model>")
+    #print("Example: python continue_training.py checkpoints/tetris_model_40000_steps.zip")
+    #sys.exit(1)
+
+#model_path = sys.argv[1]
+model_path = "tetris_ppo_final.zip"
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
@@ -17,40 +26,27 @@ elif torch.cuda.is_available():
 else:
     device = "cpu"
     print("Using CPU")
-                 
+
 print("Creating environment...")
 env = BaseEnv()
 
-policy = env.policy + "Policy"
-
-print("Creating PPO model with optimized hyperparameters...")
-model = PPO(
-    policy,
-    env,
-    verbose=1,
-    learning_rate=0.0001,
-    n_steps=1024,
-    batch_size=64,
-    n_epochs=10,
-    gamma=0.99, 
-    gae_lambda=0.95,
-    clip_range=0.2,
-    ent_coef=0.05 ,
-    vf_coef=0.5,
-    max_grad_norm=0.5,
+print(f"Loading model from: {model_path}")
+model = PPO.load(
+    model_path,
+    env=env,
+    device=device,
     tensorboard_log="./" + game + "_tensorboard/",
 )
 
 frequency = 20000
 
-# Save checkpoints frequency
 checkpoint_callback = CheckpointCallback(
     save_freq=frequency,
     save_path="./checkpoints/",
-    name_prefix= game + "_model"
+    name_prefix=game + "_model"
 )
 
-print("\nStarting training...")
+print("\nContinuing training...")
 print("Training will save checkpoints every " + str(frequency) + " steps.")
 print("You can monitor progress with TensorBoard:")
 print("  tensorboard --logdir ./" + game + "_tensorboard/")
@@ -58,14 +54,15 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 
 try:
     model.learn(
-        total_timesteps= 3000000,
+        total_timesteps=1000000,
         callback=checkpoint_callback,
-        progress_bar=True
+        progress_bar=True,
+        reset_num_timesteps=False,
     )
-    
+
     model.save(game + "_ppo_final")
-    print("\n✓ Training complete! Model saved as '" + game + "_ppo_final.zip' ")
-    
+    print("\n✓ Training complete! Model saved as '" + game + "_ppo_final.zip'")
+
 except KeyboardInterrupt:
     print("\n\nTraining interrupted by user.")
     model.save(game + "_ppo_interrupted")

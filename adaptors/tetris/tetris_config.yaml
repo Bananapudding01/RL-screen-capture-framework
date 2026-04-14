@@ -8,7 +8,7 @@ actions:
   - -1.0
   - -1.0
   - 0.0
-  discrete_actions: 40
+  discrete_actions: 4
 application_name: Mesen - Tetris (USA)
 game_over_pixel:
   BLUE: 6
@@ -28,7 +28,7 @@ input_shape:
 policy: Mlp
 preprocessing:
   blackwhite: true
-  fps: 30
+  fps: 60
   grayscale: true
   threshold: 40
 score_capture:
