@@ -3,6 +3,7 @@ import pydirectinput as gui
 import time
 
 FRAME = 1/120
+FRAME = 1/180
 
 class GameAdaptor:
     def __init__(self, env):
@@ -21,14 +22,19 @@ class GameAdaptor:
         self.prev_holes = 0
 
     def stepinput(self, action):
-        if action == 0:
-            pass
-        elif action == 1:
-            gui.press("left")
-        elif action == 2:
-            gui.press("right")
-        elif action == 3:
+        moves = action % 10
+        rotation = action // 10
+
+        for _ in range(rotation):
             gui.press("up")
+
+        for _ in range(10):
+            gui.press("left")
+
+        for _ in range(moves):
+            gui.press("right")
+
+        gui.press("down")
 
     def _count_holes(self, board):
         holes = 0
@@ -49,22 +55,21 @@ class GameAdaptor:
         current_filled = int(np.sum(full_frame))
         cell_delta = current_filled - self.prev_filled
 
-        # New piece spawns when delta is 4 minus any multiple of 10 (line clears)
         new_piece = (cell_delta % 10 == 4)
 
         lines_cleared = max(0, (4 - cell_delta)) // 10
-        line_reward = (lines_cleared ** 2) * 100
+        line_reward = (lines_cleared ** 1.5) * 500
 
         hole_penalty = 0
         if new_piece:
-            board = full_frame[3:]  # trim top 3 rows to exclude new piece
+            board = full_frame[3:]
             holes = self._count_holes(board)
-            hole_penalty = (holes - self.prev_holes) * 15
+            hole_penalty = (holes - self.prev_holes) * 3
             self.prev_holes = holes
 
         self.prev_filled = current_filled
 
-        reward = line_reward - hole_penalty
+        reward = line_reward - hole_penalty + 10
         print(f"new_piece={new_piece} lines={lines_cleared} hole_penalty={hole_penalty} reward={reward:.1f}")
         return reward
 
