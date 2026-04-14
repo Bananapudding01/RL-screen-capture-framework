@@ -1,3 +1,8 @@
+!! WARNING !!
+!! CLAUDE GENERATED README !!
+!! MAY BE INACCURATE !!
+!! WILL WRITE MANUALLY WHEN I HAVE TIME !!
+
 # RL Screen Capture Framework
 
 A reinforcement learning framework that trains agents to play games using screen capture. Instead of hooking into game internals, it captures a region of your screen, preprocesses the image into observations, and sends keyboard/mouse inputs back to the game — making it compatible with virtually any game or application.
@@ -21,7 +26,6 @@ Screen Capture  -->  Preprocessing  -->  RL Agent (PPO)  -->  Keyboard/Mouse Inp
 6. **Repeat** — The loop runs at a configurable FPS.
 
 ## Project Structure
-
 ```
 .
 ├── config.yaml                 # Top-level config — sets which game to use
