@@ -4,8 +4,9 @@ from base_env import BaseEnv
 import torch
 import yaml
 import pydirectinput as gui
+import time
 
-model_path = "tetris_ppo_final.zip"
+model_path = "tetris_ppo_interrupted.zip"
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
@@ -23,10 +24,15 @@ else:
 
 class PauseCallback(BaseCallback):
     def _on_step(self):
+        if hasattr(self.training_env.envs[0], 'adaptor'):
+            adaptor = self.training_env.envs[0].adaptor
+            self.logger.record("custom/lines_cleared", adaptor.total_lines_cleared)
         return True
     def _on_rollout_end(self):
         gui.press("f1")
     def _on_rollout_start(self):
+        gui.press("f1")
+        time.sleep(0.1)
         gui.press("f1")
 
 print("Creating environment...")

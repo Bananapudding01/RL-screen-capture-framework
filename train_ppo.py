@@ -23,6 +23,9 @@ else:
 
 class PauseCallback(BaseCallback):
     def _on_step(self):
+        if hasattr(self.training_env.envs[0], 'adaptor'):
+            adaptor = self.training_env.envs[0].adaptor
+            self.logger.record("custom/lines_cleared", adaptor.total_lines_cleared)
         return True
     def _on_rollout_end(self):
         return True

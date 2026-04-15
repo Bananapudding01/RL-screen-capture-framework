@@ -9,6 +9,7 @@ class GameAdaptor:
         self.env = env
         self.prev_filled = 0
         self.prev_holes = 0
+        self.total_lines_cleared = 0
         print("TetrisAdaptor initialized")
         gui.PAUSE = FRAME
         gui.FAILSAFE = False
@@ -19,6 +20,7 @@ class GameAdaptor:
         gui.press("enter")
         self.prev_filled = 0
         self.prev_holes = 0
+        self.total_lines_cleared = 0
 
     def stepinput(self, action):
 
@@ -58,6 +60,8 @@ class GameAdaptor:
         new_piece = (cell_delta % 10 == 4)
 
         lines_cleared = max(0, (4 - cell_delta)) // 10
+        self.total_lines_cleared += lines_cleared
+
         line_reward = (lines_cleared ** 1.5) * 500
 
         hole_penalty = 0
@@ -75,7 +79,7 @@ class GameAdaptor:
 
     def isDone(self):
         frame = self.env.frame > 0
-        for pixel in frame[0]:
+        for pixel in frame[0][:8]:
             if not pixel:
                 return False
         return True
