@@ -1,8 +1,11 @@
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, BaseCallback
 from base_env import BaseEnv
 import torch
 import yaml
+import pydirectinput as gui
+
+gui.PAUSE = 1/150
 
 with open("config.yaml", 'r') as f:
     config = yaml.safe_load(f)
@@ -17,6 +20,15 @@ elif torch.cuda.is_available():
 else:
     device = "cpu"
     print("Using CPU")
+
+class PauseCallback(BaseCallback):
+    def _on_step(self):
+        return True
+    def _on_rollout_end(self):
+        return True
+    def _on_rollout_start(self):
+        gui.press("f1")
+        gui.press("enter")
                  
 print("Creating environment...")
 env = BaseEnv()
@@ -29,7 +41,7 @@ model = PPO(
     env,
     verbose=1,
     learning_rate=0.0001,
-    n_steps=256,
+    n_steps=1024,
     batch_size=64,
     n_epochs=10,
     gamma=0.99, 
@@ -44,6 +56,9 @@ model = PPO(
 frequency = 20000
 
 # Save checkpoints frequency
+
+pause_callback = PauseCallback()
+
 checkpoint_callback = CheckpointCallback(
     save_freq=frequency,
     save_path="./checkpoints/",
@@ -59,7 +74,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 try:
     model.learn(
         total_timesteps= 1000000,
-        callback=checkpoint_callback,
+        callback=[checkpoint_callback, pause_callback],
         progress_bar=True
     )
     

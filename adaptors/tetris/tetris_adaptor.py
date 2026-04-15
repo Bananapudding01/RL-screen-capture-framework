@@ -2,8 +2,7 @@ import numpy as np
 import pydirectinput as gui
 import time
 
-FRAME = 1/120
-FRAME = 1/180
+FRAME = 1/150
 
 class GameAdaptor:
     def __init__(self, env):
@@ -12,9 +11,9 @@ class GameAdaptor:
         self.prev_holes = 0
         print("TetrisAdaptor initialized")
         gui.PAUSE = FRAME
+        gui.FAILSAFE = False
 
     def resetinput(self):
-        print("Resetting...")
         time.sleep(0.1)
         gui.press("f1")
         gui.press("enter")
@@ -22,18 +21,19 @@ class GameAdaptor:
         self.prev_holes = 0
 
     def stepinput(self, action):
+
         moves = action % 10
-        rotation = action // 10
+        rotation = (action // 10)
 
-        for _ in range(rotation):
-            gui.press("up")
+        for i in range(rotation):
+            gui.press("up") 
 
-        for _ in range(10):
-            gui.press("left")
-
-        for _ in range(moves):
-            gui.press("right")
-
+        if moves < 5:
+            for i in range(moves + 1):
+                gui.press("left")
+        else:
+            for i in range(moves - 4):
+                gui.press("right")
         gui.press("down")
 
     def _count_holes(self, board):
@@ -49,7 +49,7 @@ class GameAdaptor:
 
     def rewardinput(self):
         if self.isDone():
-            return -500
+            return -200
 
         full_frame = self.env.frame > 0
         current_filled = int(np.sum(full_frame))
@@ -69,7 +69,7 @@ class GameAdaptor:
 
         self.prev_filled = current_filled
 
-        reward = line_reward - hole_penalty + 10
+        reward = line_reward - hole_penalty + 20
         print(f"new_piece={new_piece} lines={lines_cleared} hole_penalty={hole_penalty} reward={reward:.1f}")
         return reward
 
