@@ -1,16 +1,10 @@
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
 from base_env import BaseEnv
 import torch
 import yaml
-import sys
+import pydirectinput as gui
 
-#if len(sys.argv) < 2:
-    #print("Usage: python continue_training.py <path_to_model>")
-    #print("Example: python continue_training.py checkpoints/tetris_model_40000_steps.zip")
-    #sys.exit(1)
-
-#model_path = sys.argv[1]
 model_path = "tetris_ppo_final.zip"
 
 with open("config.yaml", 'r') as f:
@@ -27,6 +21,14 @@ else:
     device = "cpu"
     print("Using CPU")
 
+class PauseCallback(BaseCallback):
+    def _on_step(self):
+        return True
+    def _on_rollout_end(self):
+        gui.press("f1")
+    def _on_rollout_start(self):
+        gui.press("f1")
+
 print("Creating environment...")
 env = BaseEnv()
 
@@ -39,36 +41,24 @@ model = PPO.load(
 )
 
 frequency = 20000
-
 checkpoint_callback = CheckpointCallback(
     save_freq=frequency,
     save_path="./checkpoints/",
     name_prefix=game + "_model"
 )
+pause_callback = PauseCallback()
 
 print("\nContinuing training...")
-print("Training will save checkpoints every " + str(frequency) + " steps.")
-print("You can monitor progress with TensorBoard:")
-print("  tensorboard --logdir ./" + game + "_tensorboard/")
-print("\nPress Ctrl+C to stop early if needed.\n")
-
 try:
     model.learn(
         total_timesteps=1000000,
-        callback=checkpoint_callback,
+        callback=[checkpoint_callback, pause_callback],
         progress_bar=True,
         reset_num_timesteps=False,
     )
-
     model.save(game + "_ppo_final")
     print("\n✓ Training complete! Model saved as '" + game + "_ppo_final.zip'")
-
 except KeyboardInterrupt:
     print("\n\nTraining interrupted by user.")
     model.save(game + "_ppo_interrupted")
     print("✓ Progress saved as '" + game + "_ppo_interrupted.zip'")
-
-print("\nTo test your model, run:")
-print("  python test.py")
-print("\nTo view tensorboard, run: tensorboard --logdir ./" + game + "_tensorboard/")
-print("\nThen open: http://localhost:6006")
