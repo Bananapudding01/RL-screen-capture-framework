@@ -36,9 +36,9 @@ for i in range(5):
     np.savetxt(f"debug_frame_{i}.txt", frame, fmt="%d")
 print("Debug frames saved. Check debug_frame_*.txt")
 input("Press enter to continue to training (or Ctrl+C to stop)...")
-'''
-# --- END DEBUG ---
 
+# --- END DEBUG ---
+'''
 policy = env.policy + "Policy"
 
 print("Creating PPO model with optimized hyperparameters...")
