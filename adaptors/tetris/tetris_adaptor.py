@@ -57,24 +57,17 @@ class GameAdaptor:
         current_filled = int(np.sum(full_frame))
         cell_delta = current_filled - self.prev_filled
 
-        new_piece = (cell_delta % 10 == 4)
-
-        lines_cleared = max(0, (4 - cell_delta)) // 10
-        self.total_lines_cleared += lines_cleared
-
-        line_reward = (lines_cleared ** 1.5) * 500
-
-        hole_penalty = 0
-        if new_piece:
-            board = full_frame[3:]
-            holes = self._count_holes(board)
-            hole_penalty = (holes - self.prev_holes) * 3
-            self.prev_holes = holes
+        if cell_delta < 0:
+            cell_delta = abs(cell_delta)
+            lines_cleared = (cell_delta / 10)
+            self.total_lines_cleared += lines_cleared
+            line_reward = (cell_delta ** 1.5) * 100
+        else:
+            line_reward = 0
 
         self.prev_filled = current_filled
 
-        reward = line_reward - hole_penalty + 20
-        print(f"new_piece={new_piece} lines={lines_cleared} hole_penalty={hole_penalty} reward={reward:.1f}")
+        reward = line_reward + 10
         return reward
 
     def isDone(self):
