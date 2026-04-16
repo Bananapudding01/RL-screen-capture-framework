@@ -20,21 +20,24 @@ elif torch.cuda.is_available():
 else:
     device = "cpu"
     print("Using CPU")
-
-class PauseCallback(BaseCallback):
-    def _on_step(self):
-        if hasattr(self.training_env.envs[0], 'adaptor'):
-            adaptor = self.training_env.envs[0].adaptor
-            self.logger.record("custom/lines_cleared", adaptor.total_lines_cleared)
-        return True
-    def _on_rollout_end(self):
-        return True
-    def _on_rollout_start(self):
-        gui.press("f1")
-        gui.press("enter")
                  
 print("Creating environment...")
 env = BaseEnv()
+
+# --- DEBUG: check what the agent actually sees ---
+'''
+import numpy as np
+obs, _ = env.reset()
+for i in range(5):
+    action = env.action_space.sample()
+    obs, r, done, _, _ = env.step(action)
+    frame = obs.reshape(20, 10)
+    print(f"step {i}: filled={frame.sum()}, reward={r}, done={done}")
+    np.savetxt(f"debug_frame_{i}.txt", frame, fmt="%d")
+print("Debug frames saved. Check debug_frame_*.txt")
+input("Press enter to continue to training (or Ctrl+C to stop)...")
+'''
+# --- END DEBUG ---
 
 policy = env.policy + "Policy"
 
@@ -50,7 +53,7 @@ model = PPO(
     gamma=0.99, 
     gae_lambda=0.95,
     clip_range=0.2,
-    ent_coef=0.05 ,
+    ent_coef=0.01 ,
     vf_coef=0.5,
     max_grad_norm=0.5,
     tensorboard_log="./" + game + "_tensorboard/",
@@ -59,8 +62,6 @@ model = PPO(
 frequency = 20000
 
 # Save checkpoints frequency
-
-pause_callback = PauseCallback()
 
 checkpoint_callback = CheckpointCallback(
     save_freq=frequency,
@@ -77,7 +78,7 @@ print("\nPress Ctrl+C to stop early if needed.\n")
 try:
     model.learn(
         total_timesteps= 1000000,
-        callback=[checkpoint_callback, pause_callback],
+        callback=[checkpoint_callback],
         progress_bar=True
     )
     

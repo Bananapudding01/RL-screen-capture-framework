@@ -22,19 +22,6 @@ else:
     device = "cpu"
     print("Using CPU")
 
-class PauseCallback(BaseCallback):
-    def _on_step(self):
-        if hasattr(self.training_env.envs[0], 'adaptor'):
-            adaptor = self.training_env.envs[0].adaptor
-            self.logger.record("custom/lines_cleared", adaptor.total_lines_cleared)
-        return True
-    def _on_rollout_end(self):
-        gui.press("f1")
-    def _on_rollout_start(self):
-        gui.press("f1")
-        time.sleep(0.1)
-        gui.press("f1")
-
 print("Creating environment...")
 env = BaseEnv()
 
@@ -52,13 +39,12 @@ checkpoint_callback = CheckpointCallback(
     save_path="./checkpoints/",
     name_prefix=game + "_model"
 )
-pause_callback = PauseCallback()
 
 print("\nContinuing training...")
 try:
     model.learn(
         total_timesteps=1000000,
-        callback=[checkpoint_callback, pause_callback],
+        callback=[checkpoint_callback],
         progress_bar=True,
         reset_num_timesteps=False,
     )
