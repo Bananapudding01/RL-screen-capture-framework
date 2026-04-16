@@ -51,7 +51,7 @@ class GameAdaptor:
 
     def rewardinput(self):
         if self.isDone():
-            return -200
+            return -100
 
         full_frame = self.env.frame > 0
         current_filled = int(np.sum(full_frame))
@@ -61,13 +61,14 @@ class GameAdaptor:
             cell_delta = abs(cell_delta)
             lines_cleared = (cell_delta / 10)
             self.total_lines_cleared += lines_cleared
-            line_reward = (cell_delta ** 1.5) * 100
+            line_reward = (cell_delta ** 1.5) * 10
         else:
             line_reward = 0
 
         self.prev_filled = current_filled
 
-        reward = line_reward + 10
+        reward = line_reward + 1
+        print("reward: " + str(reward))
         return reward
 
     def isDone(self):
