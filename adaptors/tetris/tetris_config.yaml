@@ -17,10 +17,10 @@ game_over_pixel:
   left: 600
   top: 1000
 game_region:
-  height: 323
-  left: 200
-  top: 150
-  width: 160
+  height: 605
+  left: 370
+  top: 250
+  width: 300
 input_shape:
   frame_stack: 1
   height: 20

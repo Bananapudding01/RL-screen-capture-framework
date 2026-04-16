@@ -61,7 +61,7 @@ class GameAdaptor:
             cell_delta = abs(cell_delta)
             lines_cleared = (cell_delta / 10)
             self.total_lines_cleared += lines_cleared
-            line_reward = (cell_delta ** 1.5) * 10
+            line_reward = (cell_delta ** 1.2) * 10
         else:
             line_reward = 0
 
